@@ -18,6 +18,7 @@ const TranslationKeyManager = () => {
   const setData = useUIStore((s) => s.setTranslationData);
   // get token
   const token = useUIStore((s) => s.token);
+  const setToken = useUIStore((s) => s.setToken);
 
   // bulk update
   const availableLanguages = useUIStore((s) => s.availableLanguages);
@@ -56,9 +57,14 @@ const TranslationKeyManager = () => {
         headers: {
           Authorization: `Bearer ${token}`
         }
-      }
-      );
+      });
+
       setLoading(false);
+      
+      if (res.status === 401) {        
+        setToken(null);
+        throw new Error('Unauthorized');
+      }
       if (!res.ok) throw new Error('Failed to fetch translations');
       return res.json();
     },
@@ -83,6 +89,10 @@ const TranslationKeyManager = () => {
         }
       );
       setLoading(false);
+      if (res.status === 401) {
+        setToken(null);
+        throw new Error('Unauthorized');
+      }
       if (!res.ok) throw new Error('Failed to update translation');
       return res.json();
     },
@@ -107,6 +117,10 @@ const TranslationKeyManager = () => {
         }
       });
       setLoading(true);
+      if (res.status === 401) {
+        setToken(null);
+        throw new Error('Unauthorized');
+      }
       if (!res.ok) throw new Error('Failed to delete key');
       return res.json();
     },
@@ -126,6 +140,10 @@ const TranslationKeyManager = () => {
         })
       });
       setLoading(true);
+      if (res.status === 401) {
+        setToken(null);
+        throw new Error('Unauthorized');
+      }
       if (!res.ok) throw new Error('Failed to add key');
       return res.json();
     },
@@ -155,6 +173,10 @@ const TranslationKeyManager = () => {
         }
       );
       setLoading(false);
+      if (res.status === 401) {
+        setToken(null);
+        throw new Error('Unauthorized');
+      }
       if (!res.ok) throw new Error('Bulk upload failed');
       return res.json();
     },

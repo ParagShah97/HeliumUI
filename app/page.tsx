@@ -13,8 +13,10 @@ export default function Home() {
   const setProjects = useUIStore((s) => s.setAvailableProjects);
   const setLanguages = useUIStore((s) => s.setAvailableLanguages);
   const token = useUIStore((s) => s.token);
+  const setToken = useUIStore((s) => s.setToken);
   const setUserEmail = useUIStore((s) => s.setUserEmail);
 
+  // Profile fetch
   useEffect(() => {
     const fetchProfile = async () => {
       if (!token) return;
@@ -24,9 +26,12 @@ export default function Home() {
             Authorization: `Bearer ${token}`,
           },
         });
+        if (res.status === 401) {
+          setToken(null);
+          return;
+        }
         if (!res.ok) throw new Error('Failed to fetch profile');
         const data = await res.json();
-        console.log("------->", data)
         setUserEmail(data?.user || '');
       } catch (err) {
         console.error('Error fetching profile:', err);
@@ -34,25 +39,32 @@ export default function Home() {
     };
 
     fetchProfile();
-  }, [token, setUserEmail]);
+  }, [token, setUserEmail, setToken]);
 
-
+  // Localization fetch
   const query = useQuery({
     queryKey: ['initial-localizations'],
     queryFn: async () => {
       const res = await fetch('http://127.0.0.1:8000/localizations/', {
         headers: {
-          Authorization: `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       });
+
+      if (res.status === 401) {
+        setToken(null); 
+        throw new Error('Unauthorized');
+      }
+
       if (!res.ok) throw new Error('Failed to fetch localizations');
       return res.json();
     },
     staleTime: Infinity,
     retry: 1,
-    enabled: !!token
+    enabled: !!token,
   });
 
+  
   useEffect(() => {
     if (query.data) {
       setProjects(query.data.projects);
@@ -60,6 +72,7 @@ export default function Home() {
     }
   }, [query.data, setProjects, setLanguages]);
 
+  // Fallback to login page
   if (!token) {
     return <LoginPage />;
   }
@@ -74,8 +87,7 @@ export default function Home() {
         <main className="w-full md:w-3/4 xl:w-4/5 px-4 sm:px-6 lg:px-8 space-y-6">
           <TranslationKeyManager />
         </main>
-      </div> 
-      {/* Footer */}
+      </div>
       <footer className="bg-white dark:bg-stone-800 border-t border-stone-200 dark:border-stone-700 mt-auto">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 text-center text-sm text-stone-500 dark:text-stone-400">
           <p>&copy; {new Date().getFullYear()} Helium Contractor Assignment. Good luck!</p>
