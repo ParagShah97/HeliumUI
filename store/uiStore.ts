@@ -1,6 +1,9 @@
 // store/uiStore.ts
 import { create } from 'zustand';
 
+// We can have seperate stores to store and update different values like seperate for Auth, Project, 
+// interaction operations.
+
 interface TranslationKey {
   id: string;
   key: string;
